@@ -31,7 +31,6 @@ current_chap_name = tracker['chapters'][chap_idx]
 concept_name = tracker['syllabus'][current_chap_name][concept_idx]
 print(f"Generating Manim video for: {current_chap_name} - {concept_name}")
 
-# 2. Get Manim Script & Spoken Audio from Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 prompt = f"""
 You are an expert Manim Community Python developer. Visually explain '{concept_name}' from '{current_chap_name}' for a vertical YouTube Short.
@@ -45,77 +44,81 @@ Rules:
 """
 
 max_retries = 3
-raw_response = ""
+success = False
+spoken_text = "Today we are learning an important science concept."
 
+# 2. Self-Correction Loop: Keep trying until Manim successfully compiles
 for attempt in range(max_retries):
+    print(f"\n--- Attempt {attempt + 1} of {max_retries} ---")
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="openai/gpt-oss-20b",
-            temperature=0.2, # Lower temperature for stricter code accuracy
+            temperature=0.2, 
         )
         raw_response = chat_completion.choices[0].message.content.strip()
-        break
-    except Exception as e:
-        print(f"Groq busy/error (Attempt {attempt+1}/{max_retries}): {e}")
-        if attempt < max_retries - 1:
-            time.sleep(10)
+        
+        lines = raw_response.replace('```python', '').replace('```', '').strip().split('\n')
+        manim_code = ""
+
+        if lines and lines[0].startswith("# TTS:"):
+            spoken_text = lines[0].replace("# TTS:", "").strip()
+            manim_code = '\n'.join(lines[1:])
         else:
-            raise e
+            manim_code = '\n'.join(lines)
 
-# 3. Parse output into Audio and Video components
-lines = raw_response.replace('```python', '').replace('```', '').strip().split('\n')
-spoken_text = "Today we are learning an important science concept."
-manim_code = ""
+        with open("scene.py", "w") as f:
+            f.write(manim_code)
+            
+        print(f"Extracted Script: {spoken_text}")
 
-if lines and lines[0].startswith("# TTS:"):
-    spoken_text = lines[0].replace("# TTS:", "").strip()
-    manim_code = '\n'.join(lines[1:])
-else:
-    # Fallback if Groq forgets the formatting
-    manim_code = '\n'.join(lines)
+        # Render Manim Visuals
+        print("Rendering Manim shapes...")
+        subprocess.run([
+            "manim", "scene.py", "ScienceShort", 
+            "--resolution", "1080,1920", 
+            "-o", "silent_vid.mp4"
+        ], check=True)
+        
+        # If no error is thrown, the code was perfect! Break the loop.
+        success = True
+        break 
+        
+    except subprocess.CalledProcessError:
+        print("Manim crashed! Groq wrote bad geometry code. Retrying with a new script...")
+        time.sleep(5)
+    except Exception as e:
+        print(f"API Error: {e}")
+        time.sleep(5)
 
-with open("scene.py", "w") as f:
-    f.write(manim_code)
+if not success:
+    print("Failed to generate a working Manim script after 3 tries. Will try again next schedule.")
+    exit(1)
 
-print(f"Extracted Script: {spoken_text}")
-
-# 4. Generate Voiceover
+# 3. Generate Voiceover
 audio_filename = "audio.mp3"
 tts = gTTS(text=spoken_text, lang='en', tld='co.in')
 tts.save(audio_filename)
 
-# 5. Render Manim Visuals (1080x1920)
-print("Rendering Manim shapes...")
-subprocess.run([
-    "manim", "scene.py", "ScienceShort", 
-    "--resolution", "1080,1920", 
-    "-o", "silent_vid.mp4"
-], check=True)
-
-# 6. Merge Audio and Video using MoviePy
+# 4. Merge Audio and Video using MoviePy
 safe_name = concept_name.replace(' ', '_').replace('?', '').replace(':', '').replace("'", "")
 final_filename = f"SSC_Science_{safe_name}.mp4"
 
-# Manim buries the output deep in its media folder, glob finds it dynamically
 manim_output_path = glob.glob("media/videos/scene/*/silent_vid.mp4")[0]
 
 print("Stitching audio and visuals together...")
 video_clip = VideoFileClip(manim_output_path)
 audio_clip = AudioFileClip(audio_filename)
 
-# Ensure audio and video lengths match gracefully
 final_clip = video_clip.set_audio(audio_clip)
 if audio_clip.duration > video_clip.duration:
-    # If AI talked too long, freeze the last frame of the video
     final_clip = final_clip.set_duration(audio_clip.duration)
 else:
-    # If AI talked too fast, cut the video when the audio stops
     final_clip = final_clip.set_duration(audio_clip.duration)
 
 final_clip.write_videofile(final_filename, fps=24, codec="libx264", audio_codec="aac")
 
-# 7. Update memory for next run
+# 5. Update memory for tomorrow
 tracker['current_concept_index'] += 1
 if tracker['current_concept_index'] >= len(tracker['syllabus'][current_chap_name]):
     tracker['current_concept_index'] = 0
@@ -127,3 +130,4 @@ with open('tracker.json', 'w') as file:
     json.dump(tracker, file, indent=2)
 
 print(f"Successfully generated {final_filename}")
+
