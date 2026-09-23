@@ -1,12 +1,24 @@
 {
   "current_chapter_index": 0,
-  "current_concept_index": 0,
+  "current_concept_index": 1,
   "chapters": [
     "Part 1 - Chapter 1: Gravitation",
     "Part 1 - Chapter 2: Periodic Classification of Elements"
   ],
   "syllabus": {
-    "Part 1 - Chapter 1: Gravitation": ["What is Gravitation?", "Kepler's Three Laws", "Earth's Gravitational Force", "Free Fall", "Escape Velocity"],
-    "Part 1 - Chapter 2: Periodic Classification of Elements": ["Dobereiner's Triads", "Newlands' Law of Octaves", "Mendeleev's Periodic Table", "Structure of the Modern Periodic Table", "Valency and Atomic Size"]
+    "Part 1 - Chapter 1: Gravitation": [
+      "What is Gravitation?",
+      "Kepler's Three Laws",
+      "Earth's Gravitational Force",
+      "Free Fall",
+      "Escape Velocity"
+    ],
+    "Part 1 - Chapter 2: Periodic Classification of Elements": [
+      "Dobereiner's Triads",
+      "Newlands' Law of Octaves",
+      "Mendeleev's Periodic Table",
+      "Structure of the Modern Periodic Table",
+      "Valency and Atomic Size"
+    ]
   }
 }
