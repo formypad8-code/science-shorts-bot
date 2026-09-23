@@ -1,4 +1,4 @@
-ftimport json
+import json
 import os
 import requests
 from groq import Groq
