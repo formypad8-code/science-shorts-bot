@@ -59,7 +59,9 @@ for i, video in enumerate(videos):
     
     final_video = CompositeVideoClip([bg_clip, txt_clip]).set_audio(audio_clip)
     
-    video_filename = f"SSC_Science_{concept_name.replace(' ', '_')}_Part{i+1}.mp4"
+    safe_name = concept_name.replace(' ', '_').replace('?', '').replace(':', '').replace("'", "")
+    video_filename = f"SSC_Science_{safe_name}_Part{i+1}.mp4"
+
     final_video.write_videofile(video_filename, fps=24, codec="libx264", audio_codec="aac")
     print(f"Finished creating {video_filename}!")
 
