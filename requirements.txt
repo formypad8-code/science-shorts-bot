@@ -1,0 +1,4 @@
+google-genai
+gTTS
+requests
+moviepy==1.0.3
