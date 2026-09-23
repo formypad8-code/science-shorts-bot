@@ -1,9 +1,12 @@
-name: SSC Science Shorts Automator
+name: Generate Science Shorts
 
 on:
   schedule:
     - cron: '0 5,13 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   generate-videos:
@@ -17,14 +20,13 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Install Video Text Tools
+      - name: Install Manim System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y imagemagick
-          sudo sed -i 's/<policy domain="path" rights="none" pattern="@\*"\/>/<policy domain="path" rights="read|write" pattern="@*"\/>/g' /etc/ImageMagick-6/policy.xml
+          sudo apt-get install -y ffmpeg libcairo2-dev libpango1.0-dev pkg-config
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
       - name: Run Automation Script
         env:
@@ -38,9 +40,9 @@ jobs:
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "action@github.com"
           git add tracker.json
-          git commit -m "Progressed to next concept" || echo "No changes"
+          git commit -m "Progressed to next concept" || echo "No changes to commit"
           git push
-      
+
       - name: Upload Video to Actions Tab
         uses: actions/upload-artifact@v4
         with:
