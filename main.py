@@ -37,7 +37,7 @@ Rules:
 4. Format: [{{"title": "max 60 chars with 3 hashtags", "script": "spoken script words"}}]
 """
 
-response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+response = client.models.generate_content(model='gemini-3.6-flash', contents=prompt)
 raw_response = response.text.replace('```json', '').replace('```', '').strip()
 videos = json.loads(raw_response)
 
