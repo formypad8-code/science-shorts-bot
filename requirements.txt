@@ -1,4 +1,4 @@
-google-genai
+groq
 gTTS
 requests
 moviepy==1.0.3
